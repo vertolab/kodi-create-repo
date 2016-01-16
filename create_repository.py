@@ -220,11 +220,12 @@ def build_gh_pages(root, current_dir):
 
             build_gh_pages(root, os.path.join(current_dir, item))
         else:
-            tr = etree.SubElement(table, 'tr')
-            td = etree.SubElement(tr, 'td')
-            etree.SubElement(td, 'a', href=item).text = item
-            etree.SubElement(tr, 'td').text = datetime.datetime.fromtimestamp(os.path.getmtime(item_path)).strftime('%d-%b-%Y %H:%M')
-            etree.SubElement(tr, 'td').text = str(os.path.getsize(item_path))
+            if item != 'index.html':
+                tr = etree.SubElement(table, 'tr')
+                td = etree.SubElement(tr, 'td')
+                etree.SubElement(td, 'a', href=item).text = item
+                etree.SubElement(tr, 'td').text = datetime.datetime.fromtimestamp(os.path.getmtime(item_path)).strftime('%d-%b-%Y %H:%M')
+                etree.SubElement(tr, 'td').text = str(os.path.getsize(item_path))
 
     etree.SubElement(body, 'hr')
 
