@@ -28,17 +28,29 @@ def init():
     if not os.path.isdir(plugins_dir):
         os.mkdir(plugins_dir)
 
-    if os.path.isdir(build_dir):
-        shutil.rmtree(build_dir)
+    if not os.path.isdir(build_dir):
+        os.mkdir(build_dir)
 
-    os.mkdir(build_dir)
-    os.mkdir(build_plugins_dir)
-    os.mkdir(build_repo_dir)
-    os.mkdir(build_repo_final_dir)
+    if not os.path.isdir(build_plugins_dir):
+        os.mkdir(build_plugins_dir)
+
+    if not os.path.isdir(build_repo_dir):
+        os.mkdir(build_repo_dir)
+
+    if not os.path.isdir(build_repo_final_dir):
+        os.mkdir(build_repo_final_dir)
 
 
 def build_plugins():
-    addons_xml_root = etree.Element('addons')
+    addons_xml_file = os.path.join(build_plugins_dir, 'addons.xml')
+    existing_addons = {}
+
+    if os.path.isfile(addons_xml_file):
+        addons_xml_root =  etree.parse(addons_xml_file).getroot()
+
+        existing_addons = {a.attrib['id']: a.attrib['version'] for a in addons_xml_root.findall('addon')}
+    else:
+        addons_xml_root = etree.Element('addons')
 
     for plugin_info in plugins_info:
         name = plugin_info['name']
@@ -64,29 +76,45 @@ def build_plugins():
 
         name_with_version = '%s-%s' % (name, version)
         print name_with_version
-        build_repo_path = os.path.join(build_plugins_dir, name_with_version)
 
-        shutil.copytree(repo_dir, build_repo_path, ignore=shutil.ignore_patterns('.git*'))
+        include_addon = True
 
-        shutil.make_archive(build_repo_path, 'zip', build_plugins_dir, name_with_version)
+        existing_addon_info = addons_xml_root.find("addon[@id='%s']" % name)
+        if existing_addon_info is not None:
+            v = dict(existing_addon_info.items())['version']
+            _name_with_version = '%s-%s' % (name, v)
 
-        shutil.move('%s.zip' % build_repo_path, build_repo_path)
-
-        plugin_addon_xml = etree.parse(open(os.path.join(build_repo_path, 'addon.xml')))
-        addons_xml_root.append(plugin_addon_xml.getroot())
-
-        for f in os.listdir(build_repo_path):
-            if f.startswith('changelog.') or f.startswith('fanart.') or f.startswith('icon.') or f.endswith('.zip'):
-                pass
+            if name_with_version == _name_with_version:
+                include_addon = False
             else:
-                _f = os.path.join(build_repo_path, f)
-                if os.path.isdir(_f):
-                    shutil.rmtree(_f)
-                else:
-                    os.remove(_f)
+                addons_xml_root.remove(existing_addon_info)
+                _build_repo_path = os.path.join(build_plugins_dir, _name_with_version)
+                shutil.rmtree(_build_repo_path)
 
-        shutil.move(os.path.join(build_repo_path, 'changelog.txt'), os.path.join(build_repo_path, 'changelog-%s.txt' % version))
-        shutil.move(build_repo_path, os.path.join(build_plugins_dir, name))
+        if include_addon:
+            build_repo_path = os.path.join(build_plugins_dir, name_with_version)
+
+            shutil.copytree(repo_dir, build_repo_path, ignore=shutil.ignore_patterns('.git*'))
+
+            shutil.make_archive(build_repo_path, 'zip', build_plugins_dir, name_with_version)
+
+            shutil.move('%s.zip' % build_repo_path, build_repo_path)
+
+            plugin_addon_xml = etree.parse(open(os.path.join(build_repo_path, 'addon.xml')))
+            addons_xml_root.append(plugin_addon_xml.getroot())
+
+            for f in os.listdir(build_repo_path):
+                if f.startswith('changelog.') or f.startswith('fanart.') or f.startswith('icon.') or f.endswith('.zip'):
+                    pass
+                else:
+                    _f = os.path.join(build_repo_path, f)
+                    if os.path.isdir(_f):
+                        shutil.rmtree(_f)
+                    else:
+                        os.remove(_f)
+
+            shutil.move(os.path.join(build_repo_path, 'changelog.txt'), os.path.join(build_repo_path, 'changelog-%s.txt' % version))
+            shutil.move(build_repo_path, os.path.join(build_plugins_dir, name))
 
     xml_str = etree.tostring(addons_xml_root, pretty_print=True)
 
@@ -148,6 +176,9 @@ def build_repo():
     f.write(changelog)
     f.close()
 
+    zip_file = os.path.join(build_repo_final_dir, '%s.zip' % repo_name_with_version)
+    if os.path.isfile(zip_file):
+        os.remove(zip_file)
     shutil.make_archive(build_repo_final_dir, 'zip', build_repo_dir, repo_name_with_version)
     shutil.move('%s.zip' % build_repo_final_dir, build_repo_final_dir)
 
