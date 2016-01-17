@@ -89,7 +89,8 @@ def build_plugins():
             else:
                 addons_xml_root.remove(existing_addon_info)
                 _build_repo_path = os.path.join(build_plugins_dir, _name_with_version)
-                shutil.rmtree(_build_repo_path)
+                if os.path.isdir(_build_repo_path):
+                    shutil.rmtree(_build_repo_path)
 
         if include_addon:
             build_repo_path = os.path.join(build_plugins_dir, name_with_version)
@@ -114,7 +115,18 @@ def build_plugins():
                         os.remove(_f)
 
             shutil.move(os.path.join(build_repo_path, 'changelog.txt'), os.path.join(build_repo_path, 'changelog-%s.txt' % version))
-            shutil.move(build_repo_path, os.path.join(build_plugins_dir, name))
+
+            dst = os.path.join(build_plugins_dir, name)
+            if os.path.isdir(dst):
+                for f in os.listdir(build_repo_path):
+                    s = os.path.join(build_repo_path, f)
+                    d = os.path.join(dst, f)
+                    if os.path.isfile(d):
+                        os.remove(d)
+                    shutil.move(s, d)
+                shutil.rmtree(build_repo_path)
+            else:
+                shutil.move(build_repo_path, os.path.join(build_plugins_dir, name))
 
     xml_str = etree.tostring(addons_xml_root, pretty_print=True)
 
