@@ -1,3 +1,5 @@
+Check Kodi Repo (google-drive) for deployment instructions
+
 # kodi-create-repo
 Helper script to put together a Kodi repo for your plugins
 
