@@ -1,0 +1,18 @@
+{
+    "repository": {
+        "id": "repository.vertolab",
+        "name": "Verto Lab Repo",
+        "version": "1.0.1",
+        "provider-name": "Verto Lab",
+        "summary": "Voice control your Kodi using Amazon Alexa",
+        "description": "Voice control your Kodi using Amazon Alexa enabled devices such as Echo. Support for Google Home might be added in the future.",
+        "icon": "icon.png"
+    },
+    "host_url": "http://kodi-repo.vertolab.com",
+    "plugins": [
+        {
+            "name": "script.service.miracle",
+            "github_url": "https://github.com/vertolab/miracle.git"
+        }
+    ]
+}
