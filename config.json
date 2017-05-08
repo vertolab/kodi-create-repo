@@ -11,7 +11,7 @@
     "host_url": "http://kodi-repo.vertolab.com",
     "plugins": [
         {
-            "name": "script.service.miracle",
+            "name": "script.service.miracue",
             "github_url": "https://github.com/vertolab/miracle.git"
         }
     ]
